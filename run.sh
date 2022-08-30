@@ -2,7 +2,7 @@ python voc2coco.py --ann_dir ../Annotations \
     --ann_ids ../align_train.txt \
     --labels flir-labels.txt \
     --output outputs/rgb-train-coco.json \
-    --img_type thermal \
+    --img_type rgb \
     --ext xml
 python voc2coco.py --ann_dir ../Annotations \
     --ann_ids ../align_train.txt \
