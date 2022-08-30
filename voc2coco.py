@@ -10,7 +10,8 @@ import re
 def get_label2id(labels_path: str) -> Dict[str, int]:
     """id is 1 start"""
     with open(labels_path, 'r') as f:
-        labels_str = f.read().split()
+        #labels_str = f.read().split()
+        labels_str = [line.rstrip() for line in f]
     labels_ids = list(range(1, len(labels_str)+1))
     return dict(zip(labels_str, labels_ids))
 
@@ -37,6 +38,7 @@ def get_image_info(annotation_root, extract_num_from_imgid=True):
     path = annotation_root.findtext('path')
     if path is None:
         filename = annotation_root.findtext('filename')
+        filename = filename[0:10] + '_RGB.jpg'
     else:
         filename = os.path.basename(path)
     img_name = os.path.basename(filename)
@@ -134,6 +136,7 @@ def main():
                         help='Extract image number from the image filename')
     args = parser.parse_args()
     label2id = get_label2id(labels_path=args.labels)
+    print(label2id)
     ann_paths = get_annpaths(
         ann_dir_path=args.ann_dir,
         ann_ids_path=args.ann_ids,
