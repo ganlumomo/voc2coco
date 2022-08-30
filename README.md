@@ -1,3 +1,12 @@
+# flir-aligned2coco
+
+```
+unzip aligned.zip
+cd aligned/align
+git clone https://github.com/ganlumomo/voc2coco.git
+bash run.sh
+```
+
 # voc2coco
 
 This is script for converting VOC format XMLs to COCO format json(ex. coco_eval.json).
