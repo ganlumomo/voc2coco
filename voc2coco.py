@@ -34,11 +34,16 @@ def get_annpaths(ann_dir_path: str = None,
     return ann_paths
 
 
-def get_image_info(annotation_root, extract_num_from_imgid=True):
+def get_image_info(annotation_root, img_type, extract_num_from_imgid=True):
     path = annotation_root.findtext('path')
     if path is None:
         filename = annotation_root.findtext('filename')
-        filename = filename[0:10] + '_RGB.jpg'
+        if img_type == 'rgb':
+            filename = filename[0:10] + '_RGB.jpg'
+        elif img_type == 'thermal':
+            filename = filename[0:10] + '_PreviewData.jpeg'
+        else:
+            raise ValueError("Image type {} is not defined.".format(img_type))
     else:
         filename = os.path.basename(path)
     img_name = os.path.basename(filename)
@@ -85,6 +90,7 @@ def get_coco_annotation_from_obj(obj, label2id):
 def convert_xmls_to_cocojson(annotation_paths: List[str],
                              label2id: Dict[str, int],
                              output_jsonpath: str,
+                             img_type: str,
                              extract_num_from_imgid: bool = True):
     output_json_dict = {
         "images": [],
@@ -99,12 +105,14 @@ def convert_xmls_to_cocojson(annotation_paths: List[str],
         ann_tree = ET.parse(a_path)
         ann_root = ann_tree.getroot()
 
-        img_info = get_image_info(annotation_root=ann_root,
+        img_info = get_image_info(annotation_root=ann_root, img_type=img_type,
                                   extract_num_from_imgid=extract_num_from_imgid)
         img_id = img_info['id']
         output_json_dict['images'].append(img_info)
 
         for obj in ann_root.findall('object'):
+            if obj.findtext('name') == 'dog':
+                continue
             ann = get_coco_annotation_from_obj(obj=obj, label2id=label2id)
             ann.update({'image_id': img_id, 'id': bnd_id})
             output_json_dict['annotations'].append(ann)
@@ -134,6 +142,7 @@ def main():
     parser.add_argument('--ext', type=str, default='', help='additional extension of annotation file')
     parser.add_argument('--extract_num_from_imgid', action="store_true",
                         help='Extract image number from the image filename')
+    parser.add_argument('--img_type', type=str, default='rgb', help='rgb or thermal')
     args = parser.parse_args()
     label2id = get_label2id(labels_path=args.labels)
     print(label2id)
@@ -147,6 +156,7 @@ def main():
         annotation_paths=ann_paths,
         label2id=label2id,
         output_jsonpath=args.output,
+        img_type=args.img_type,
         extract_num_from_imgid=args.extract_num_from_imgid
     )
 
