@@ -1,5 +1,5 @@
 person
-bicycle
+bike
 car
 motor
 airplane
