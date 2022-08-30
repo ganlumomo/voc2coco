@@ -41,7 +41,7 @@ def get_image_info(annotation_root, img_type, extract_num_from_imgid=True):
         if img_type == 'rgb':
             filename = filename[0:10] + '_RGB.jpg'
         elif img_type == 'thermal':
-            filename = filename[0:10] + '_PreviewData.jpeg'
+            filename = filename[0:10] + '_PreviewData.jpg'
         else:
             raise ValueError("Image type {} is not defined.".format(img_type))
     else:
