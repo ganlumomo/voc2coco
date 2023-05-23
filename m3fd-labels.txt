@@ -1,0 +1,10 @@
+People
+bike
+Car
+Motorcycle
+airplane
+Bus
+train
+Truck
+boat
+Lamp
