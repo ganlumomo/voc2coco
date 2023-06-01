@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 from typing import Dict, List
 from tqdm import tqdm
 import re
+from pathlib import Path
 
 
 def get_label2id(labels_path: str) -> Dict[str, int]:
@@ -34,8 +35,9 @@ def get_annpaths(ann_dir_path: str = None,
     return ann_paths
 
 
-def get_image_info(annotation_root, img_type, annotation_path, extract_num_from_imgid=True):
+def get_image_info(annotation_root, img_type, annotation_path, scenarios_path, extract_num_from_imgid=True):
     path = annotation_root.findtext('path')
+    scenarios = json.load((scenarios_path).open('r'))
     if path is None:
         filename = annotation_root.findtext('filename')
         if img_type == 'rgb':
@@ -46,6 +48,20 @@ def get_image_info(annotation_root, img_type, annotation_path, extract_num_from_
             raise ValueError("Image type {} is not defined.".format(img_type))
     else:
         filename = os.path.basename(path)
+
+    # search for scene
+    img_scene = 0
+    scene2label = {'daytime':1, 'night':2, 'overcast':3, 'challenge':4}
+    filename = int(annotation_path[-9:-4])
+    for scenario in scenarios:
+        for scene in scenario['scene']:
+            for fr in scene['range']:
+                frames = list(range(fr['min'], fr['max'] + 1))
+                if filename in frames:
+                    img_scene = scene2label[scenario['name']]
+                    #print(scenario['name'])
+                    #print(img_scene)
+    
     filename = annotation_path[-9:-4] + '.png'
     #print(filename)
     img_name = os.path.basename(filename)
@@ -61,7 +77,8 @@ def get_image_info(annotation_root, img_type, annotation_path, extract_num_from_
         'file_name': filename,
         'height': height,
         'width': width,
-        'id': img_id
+        'id': img_id,
+        'scene': img_scene,
     }
     return image_info
 
@@ -93,6 +110,7 @@ def get_coco_annotation_from_obj(obj, label2id):
 
 def convert_xmls_to_cocojson(annotation_paths: List[str],
                              label2id: Dict[str, int],
+                             scenarios_path: str,
                              output_jsonpath: str,
                              img_type: str,
                              extract_num_from_imgid: bool = True):
@@ -110,7 +128,7 @@ def convert_xmls_to_cocojson(annotation_paths: List[str],
         ann_root = ann_tree.getroot()
 
         img_info = get_image_info(annotation_root=ann_root, img_type=img_type, annotation_path=a_path,
-                                  extract_num_from_imgid=extract_num_from_imgid)
+                                  scenarios_path=scenarios_path, extract_num_from_imgid=extract_num_from_imgid)
         img_id = img_info['id']
         output_json_dict['images'].append(img_info)
 
@@ -159,6 +177,7 @@ def main():
     convert_xmls_to_cocojson(
         annotation_paths=ann_paths,
         label2id=label2id,
+        scenarios_path=Path('/home/ganlu/workspace/TarDAL/data/M3FD/meta/scenario.json'),
         output_jsonpath=args.output,
         img_type=args.img_type,
         extract_num_from_imgid=args.extract_num_from_imgid
